@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kattaqo'rg'on tumani 1-son texnikumi | HEMIS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
+        /* Loading Overlay */
+        #loadingOverlay {
+            transition: opacity 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 h-screen overflow-hidden flex">
+
+    <!-- LOADING OVERLAY -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[99] flex flex-col items-center justify-center hidden">
+        <div class="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p class="text-sm font-bold text-slate-200 tracking-wide" id="loadingText">Ma'lumotlar yuklanmoqda...</p>
+    </div>
+
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen" class="fixed inset-0 bg-gradient-to-tr from-slate-950 via-blue-950 to-indigo-950 flex items-center justify-center z-50 p-4">
+        <div class="bg-slate-900/90 backdrop-blur-2xl p-8 md:p-10 rounded-3xl w-full max-w-md shadow-2xl border border-slate-800/80 text-center relative overflow-hidden">
+            <div class="absolute -top-24 -right-24 w-48 h-48 bg-blue-600/20 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <div class="w-20 h-20 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-2xl mx-auto flex items-center justify-center text-white text-3xl shadow-xl shadow-blue-500/30 mb-6 border border-blue-400/30">
+                <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            
+            <h1 class="text-xl md:text-2xl font-extrabold text-white tracking-tight mb-2">Kattaqo'rg'on tumani 1-son texnikumi[<>]</h1>
+            <h2 class="text-xs font-bold text-blue-400 mb-6 uppercase tracking-widest bg-blue-500/10 py-1.5 px-3 rounded-full inline-block border border-blue-500/20">HEMIS 210-Guruh Tizimi[Sizni kutayabdi]</h2>
+            
+            <div class="space-y-4 text-left">
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Foydalanuvchi logini</label>
+                    <input type="text" id="loginInput" class="w-full px-4 py-3.5 bg-slate-800/80 border border-slate-700/80 rounded-2xl text-sm font-medium text-white focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="Loginni kiriting" autocapitalize="none" autocomplete="off">
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Parol</label>
+                    <input type="password" id="passInput" class="w-full px-4 py-3.5 bg-slate-800/80 border border-slate-700/80 rounded-2xl text-sm font-medium text-white focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="Parolni kiriting">
+                </div>
+                <button onclick="handleLogin()" class="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-2xl shadow-lg shadow-blue-600/30 transition duration-200 mt-2 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-right-to-bracket"></i> Tizimga kirish[Marhamat Ustoz]
+                </button>
+            </div>
+
+            <div class="mt-4">
+                <a href="#teacher" onclick="loginAsTeacherDirect()" class="block w-full py-3 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 font-bold rounded-2xl text-xs border border-emerald-500/30 transition text-center">
+                    <i class="fa-solid fa-chalkboard-user mr-1.5"></i> O'qituvchilar uchun to'g'ridan-to'g'ri kirish[Siz uchun]
+                </a>
+            </div>
+
+            <div class="mt-4 p-3 bg-slate-950/60 rounded-2xl text-xs text-slate-400 text-left space-y-1 border border-slate-800/80">
+                <div>👑 <strong class="text-slate-200">Admin:</strong> <code class="text-blue-400 font-bold">Sunnatillo</code> / <code class="text-blue-400 font-bold">Qarshiyev</code>[210]</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP CONTAINER -->
+    <div id="appContainer" class="hidden w-full h-full flex bg-slate-950 text-slate-100">
+        <!-- SIDEBAR -->
+        <aside class="w-72 bg-slate-900/90 border-r border-slate-800 flex flex-col shadow-2xl backdrop-blur-lg">
+            <div class="p-6 border-b border-slate-800 flex items-center gap-3.5">
+                <div class="w-11 h-11 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30 border border-blue-400/20">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div>
+                    <div class="font-bold text-white text-sm tracking-wide">210-GURUH HEMIS[cite: 1]</div>
+                    <div class="text-[11px] text-blue-400 font-medium">Texnikum platformasi[<>]</div>
+                </div>
+            </div>
+
+            <ul class="p-4 space-y-2 flex-1 overflow-y-auto custom-scrollbar" id="sidebarMenu">
+                <li>
+                    <a href="#" onclick="switchTab('davomat', this)" class="sidebar-link active flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg shadow-blue-600/25 transition" id="menuDavomat">
+                        <i class="fa-solid fa-clipboard-user w-5 text-center"></i> Davomat va Jurnal[><]
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="switchTab('history', this)" class="sidebar-link flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition" id="menuHistory">
+                        <i class="fa-solid fa-clock-rotate-left w-5 text-center"></i> Davomat Tarixi
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="switchTab('stats', this)" class="sidebar-link flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition" id="menuStats">
+                        <i class="fa-solid fa-chart-pie w-5 text-center"></i> Statistika & Grafiklar
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="switchTab('students', this)" class="sidebar-link flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition" id="menuStudents">
+                        <i class="fa-solid fa-users w-5 text-center"></i> O'quvchilar (26 ta)[cite: 1]
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="switchTab('teachers', this)" class="sidebar-link flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition" id="menuTeachers">
+                        <i class="fa-solid fa-chalkboard-user w-5 text-center"></i> O'qituvchilar[<>]
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="switchTab('syllabus', this)" class="sidebar-link flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition" id="menuSyllabus">
+                        <i class="fa-solid fa-calendar-days w-5 text-center"></i> Taqvim-Mavzu Reja[><]
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="switchTab('botsettings', this)" class="sidebar-link flex items-center gap-3.5 px-4 py-3.5 rounded-2xl text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition" id="menuBot">
+                        <i class="fa-brands fa-telegram w-5 text-center"></i> Telegram Bot Sozlama[cite: 1]
+                    </a>
+                </li>
+            </ul>
+
+            <div class="p-4 border-t border-slate-800">
+                <button onclick="logout()" class="w-full py-3.5 px-4 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-semibold rounded-2xl text-sm flex items-center justify-center gap-2 border border-rose-500/20 transition">
+                    <i class="fa-solid fa-right-from-bracket"></i> Tizimdan chiqish[Rahmat]
+                </button>
+            </div>
+        </aside>
+
+        <!-- CONTENT AREA -->
+        <main class="flex-1 flex flex-col h-full overflow-hidden bg-slate-950">
+            <header class="h-20 bg-slate-900/80 border-b border-slate-800 flex items-center justify-between px-8 shadow-md backdrop-blur-lg">
+                <div>
+                    <h1 class="text-base font-bold text-white tracking-tight" id="pageTitle">Davomat va Jurnal</h1>
+                    <span class="text-xs text-slate-400">Kattaqo'rg'on tumani 1-son texnikumi[<>]</span>
+                </div>
+
+                <!-- Live Date & User Status -->
+                <div class="flex items-center gap-4">
+                    <div class="hidden lg:flex items-center gap-2 bg-slate-800/80 px-4 py-2 rounded-2xl border border-slate-700/60 text-xs font-semibold text-slate-300">
+                        <i class="fa-regular fa-clock text-blue-400"></i>
+                        <span id="liveClockDisplay">--:--:--</span>
+                    </div>
+
+                    <div class="flex items-center gap-3.5 bg-slate-800/80 px-4 py-2 rounded-2xl border border-slate-700/60">
+                        <div class="w-9 h-9 bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center font-bold border border-blue-500/30" id="userIcon">
+                            <i class="fa-solid fa-user-shield"></i>
+                        </div>
+                        <div class="text-left">
+                            <div class="text-xs font-bold text-white" id="userNameDisplay">Guruh rahbari: Qarshiyev Sunnatillo[cite: 1]</div>
+                            <div class="text-[10px] text-emerald-400 font-semibold uppercase tracking-wider flex items-center gap-1.5"><span class="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span> Aktiv sessiya[<>]</div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="flex-1 p-8 overflow-y-auto space-y-6 custom-scrollbar">
+                
+                <!-- DAVOMAT TAB -->
+                <div id="davomat" class="tab-content space-y-6">
+                    <div class="bg-slate-900/90 p-6 rounded-3xl border border-slate-800 shadow-xl">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-sm font-bold text-white flex items-center gap-2 uppercase tracking-wider">
+                                <i class="fa-solid fa-filter text-blue-500"></i> Dars va Guruhni Tanlash[><]
+                            </h3>
+                            <span id="todayBadge" class="text-xs bg-blue-500/10 text-blue-400 font-bold px-3 py-1 rounded-full border border-blue-500/20">
+                                <i class="fa-solid fa-calendar-check mr-1"></i> Bugun: ...[cite: 1]
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Hafta kuni[><]</label>
+                                <select id="selectDay" class="w-full px-4 py-3.5 bg-slate-800/80 border border-slate-700 rounded-2xl text-sm font-semibold text-white outline-none focus:ring-2 focus:ring-blue-500" onchange="loadLessonSchedule()">
+                                    <option value="Du">Dushanba[cite: 1]</option>
+                                    <option value="Se">Seshanba[cite: 1]</option>
+                                    <option value="Ch">Chorshanba[cite: 1]</option>
+                                    <option value="Pa">Payshanba</option>
+                                    <option value="Ju">Juma</option>
+                                    <option value="Sh">Shanba</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Fan va O'qituvchi</label>
+                                <select id="selectSubject" class="w-full px-4 py-3.5 bg-slate-800/80 border border-slate-700 rounded-2xl text-sm font-semibold text-white outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="Matematika (Qarshiyev Sunnatillo)">Matematika (Qarshiyev Sunnatillo)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/90 p-6 rounded-3xl border border-slate-800 shadow-xl">
+                        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
+                            <div>
+                                <h3 class="text-base font-bold text-white">210-Guruh Talabalar Ro'yxati va Baholash</h3>
+                                <p class="text-xs text-slate-400 mt-0.5">Jami 26 nafar talaba ishtirok etmoqda</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <button onclick="exportAttendanceExcel()" class="px-5 py-3.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 font-bold rounded-2xl text-sm border border-emerald-500/30 transition flex items-center gap-2">
+                                    <i class="fa-solid fa-file-excel"></i> Excelga Export
+                                </button>
+                                <button id="btnSaveAttendance" onclick="saveAttendanceAndSendTelegram()" class="px-6 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold rounded-2xl text-sm shadow-lg shadow-blue-600/30 transition flex items-center gap-2">
+                                    <i class="fa-solid fa-paper-plane"></i> Saqlash & Telegramga Yuborish
+                                </button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                        <th class="py-4 px-4">T/r</th>
+                                        <th class="py-4 px-4">F.I.SH</th>
+                                        <th class="py-4 px-4">Keldi / Kelmadi / Kechikdi</th>
+                                        <th class="py-4 px-4">Baho (1-5)</th>
+                                        <th class="py-4 px-4">Ota-ona Chat ID</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="attendanceTableBody" class="divide-y divide-slate-800/50 text-sm font-medium"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- HISTORY TAB -->
+                <div id="history" class="tab-content hidden space-y-6">
+                    <div class="bg-slate-900/90 p-6 rounded-3xl border border-slate-800 shadow-xl">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <h3 class="text-base font-bold text-white">Kunlik Davomat Tarixi</h3>
+                                <p class="text-xs text-slate-400 mt-0.5">Oldingi darslarda saqlangan barcha davomat hisobotlari</p>
+                            </div>
+                            <button onclick="clearHistory()" class="px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-xs font-semibold rounded-xl border border-rose-500/20 transition">
+                                <i class="fa-solid fa-trash mr-1"></i> Tarixni Tozalash
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                        <th class="py-4 px-4">Sana & Vaqt</th>
+                                        <th class="py-4 px-4">Fan nomi</th>
+                                        <th class="py-4 px-4">Kelganlar</th>
+                                        <th class="py-4 px-4">Kechikkanlar</th>
+                                        <th class="py-4 px-4">Kelmaganlar</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historyTableBody" class="divide-y divide-slate-800/50 text-sm font-medium">
+                                    <tr>
+                                        <td colspan="5" class="py-6 text-center text-slate-500 text-xs">Hozircha saqlangan davomat tarixi mavjud emas.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STATS & CHARTS TAB -->
+                <div id="stats" class="tab-content hidden space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div class="bg-slate-900/90 p-6 rounded-3xl border border-slate-800 shadow-xl flex items-center gap-4">
+                            <div class="w-14 h-14 bg-blue-600/20 text-blue-400 rounded-2xl flex items-center justify-center text-xl font-bold border border-blue-500/30">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Jami Talabalar</div>
+                                <div class="text-2xl font-extrabold text-white">26 nafar</div>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900/90 p-6 rounded-3xl border border-slate-800 shadow-xl flex items-center gap-4">
+                            <div class="w-14 h-14 bg-emerald-600/20 text-emerald-400 rounded-2xl flex items-center justify-center text-xl font-bold border border-emerald-500/30">
+                                <i class="fa-solid fa-calendar-check"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Jami Darslar tarixi</div>
+                                <div class="text-2xl font-extrabold text-white" id="statTotalSessions">0 ta</div>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900/90 p-6 rounded-3xl border border-slate-800 shadow-xl flex items-center gap-4">
+                            <div class="w-14 h-14 bg-indigo-600/20 text-indigo-400 rounded-2xl flex items-center justify-center text-xl font-bold border border-indigo-500/30">
+                                <i class="fa-solid fa-chart-line"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs text-slate-400 font-semibold uppercase tracking-wider">O'rtacha Davomat</div>
+                                <div class="text-2xl font-extrabold text-white" id="statAvgAttendance">-- %</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900/90 p-6 rounded-3xl border border-slate-800 shadow-xl">
+                        <h3 class="text-base font-bold text-white mb-4">Oxirgi Darslar Davomat Statistikasi (Grafik)</h3>
+                        <div class="w-full h-80 relative flex items-center justify-center">
+                            <canvas id="attendanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STUDENTS TAB -->
+                <div id="students" class="tab-content hidden space-y-6">
+                    <div class="bg-slate-900/90 p-6 rounded-3xl border border-slate-800 shadow-xl">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-base font-bold text-white">210-Guruh O'quvchilari (Traktor Mashinist-haydovchisi)</h3>
+                            <button onclick="exportStudentsExcel()" class="px-4 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 font-bold rounded-xl text-xs border border-emerald-500/30 transition">
+                                <i class="fa-solid fa-file-excel mr-1.5"></i> Ro'yxatni Excelga Yuklash
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                        <th class="py-4 px-4">T/r</th>
+                                        <th class="py-4 px-4">F.I.SH</th>
+                                        <th class="py-4 px-4">Ota-onasi</th>
+                                        <th class="py-4 px-4">Telefon raqami</th>
+                                        <th class="py-4 px-4">Telegram Chat ID</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="studentsTableBody" class="divide-y divide-slate-800/50 text-sm font-medium"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TEACHERS TAB -->
+                <div id="teachers" class="tab-content hidden space-y-6">
+                    <div class="bg-slate-900/90 p-6 rounded-3xl border border-slate-800 shadow-xl">
+                        <h3 class="text-base font-bold text-white mb-6">210-Guruh O'qituvchilari Ro'yxati</h3>
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                        <th class="py-4 px-4">F.I.SH</th>
+                                        <th class="py-4 px-4">Fan nomi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="teachersTableBody" class="divide-y divide-slate-800/50 text-sm font-medium"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SYLLABUS TAB -->
+                <div id="syllabus" class="tab-content hidden space-y-6">
+                    <div class="bg-slate-900/90 p-6 rounded-3xl border border-slate-800 shadow-xl">
+                        <h3 class="text-base font-bold text-white mb-4">Taqvim-Mavzu Reja (Sillabus)</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Fan nomi</label>
+                                <input type="text" id="syllabusSubject" class="w-full px-4 py-3.5 bg-slate-800/80 border border-slate-700 rounded-2xl text-sm font-medium text-white outline-none focus:ring-2 focus:ring-blue-500" value="Matematika">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Mavzu nomi</label>
+                                <input type="text" id="syllabusTopic" class="w-full px-4 py-3.5 bg-slate-800/80 border border-slate-700 rounded-2xl text-sm font-medium text-white outline-none focus:ring-2 focus:ring-blue-500" placeholder="Mavzu nomini kiriting...">
+                            </div>
+                        </div>
+                        <button onclick="addSyllabus()" class="px-6 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl text-sm shadow-lg shadow-blue-600/30 transition">Rejaga qo'shish</button>
+                    </div>
+
+                    <div class="bg-slate-900/90 p-6 rounded-3xl border border-slate-800 shadow-xl">
+                        <div class="overflow-x-auto custom-scrollbar">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="border-b border-slate-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                        <th class="py-4 px-4">#</th>
+                                        <th class="py-4 px-4">Fan</th>
+                                        <th class="py-4 px-4">Mavzu</th>
+                                        <th class="py-4 px-4">Sana</th>
+                                        <th class="py-4 px-4">Amallar</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="syllabusTableBody" class="divide-y divide-slate-800/50 text-sm font-medium"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BOT SETTINGS TAB -->
+                <div id="botsettings" class="tab-content hidden space-y-6">
+                    <div class="bg-slate-900/90 p-6 rounded-3xl border border-slate-800 shadow-xl max-w-xl">
+                        <h3 class="text-base font-bold text-white mb-4">Telegram Bot API Sozlamalari</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Bot Token</label>
+                                <input type="text" id="botTokenInput" class="w-full px-4 py-3.5 bg-slate-800/80 border border-slate-700 rounded-2xl text-sm font-medium text-white outline-none focus:ring-2 focus:ring-blue-500" placeholder="7686754775:AAFL...">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Shaxsiy Admin Chat ID (Sizning Telegram ID)</label>
+                                <input type="text" id="chatIdInput" class="w-full px-4 py-3.5 bg-slate-800/80 border border-slate-700 rounded-2xl text-sm font-medium text-white outline-none focus:ring-2 focus:ring-blue-500" value="6389454177" placeholder="6389454177">
+                            </div>
+                            <button onclick="saveBotSettings()" class="px-6 py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-2xl text-sm shadow-lg shadow-blue-600/30 transition">Sozlamalarni Saqlash</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const students26 = [
+            {id: 1, name: "Hikmatov Vasliddin Aslon oʻgʻli", phone: "", parent: "Otasi / Onasi", chatId: "6389454177"},
+            {id: 2, name: "Husanov Muhammadi Laziz oʻgʻli", phone: "+998948259979", parent: "Rajabov L. / Mustofayva H.", chatId: "6389454177"},
+            {id: 3, name: "Norbekov Pirmamat Samandar oʻgʻli", phone: "+998883212081", parent: "Primov S. / Kenjayeva E.", chatId: "6389454177"},
+            {id: 4, name: "Normurodov Oʻktamjon Ikrom oʻgʻli", phone: "", parent: "Otasi / Onasi", chatId: "6389454177"},
+            {id: 5, name: "Norqulov Elshod Quvondiqjon oʻgʻli", phone: "+998976490906", parent: "Xolmurodov Q. / Xolboyva N.", chatId: "6389454177"},
+            {id: 6, name: "Nuriddenov Asilbek Anvar oʻgʻli", phone: "", parent: "Umurzoqov Anvar", chatId: "6389454177"},
+            {id: 7, name: "Nurmamatov Javlonbek Sherzod oʻgʻli", phone: "+998951594434", parent: "Ergashov Sh. / Rahmonova M.", chatId: "6389454177"},
+            {id: 8, name: "Oʻktamov Asadbek Akmaljon oʻgʻli", phone: "+998946806268", parent: "Daminov A. / Sultonova Y.", chatId: "6389454177"},
+            {id: 9, name: "Omonov Alijon Vasliddin oʻgʻli", phone: "+998704812409", parent: "Suyarov V. / Orziyva M.", chatId: "6389454177"},
+            {id: 10, name: "Rahimov Ismoiljon Joʻraqul oʻgʻli", phone: "+998951718488", parent: "Rahimov J. / Xolmurodova U.", chatId: "6389454177"},
+            {id: 11, name: "Rahmatillaev Asilbek Otabek oʻgʻli", phone: "+998772617209", parent: "Shomurodov O. / Muhamadiyva S.", chatId: "6389454177"},
+            {id: 12, name: "Rahmatullaev Sobirjon Bobir oʻgʻli", phone: "+998509984707", parent: "Yuldoshov B. / Tojiyva N.", chatId: "6389454177"},
+            {id: 13, name: "Razzoqov Azizbek Rahmatillo oʻgʻli", phone: "+998500999945", parent: "Obilov R. / Muminova A.", chatId: "6389454177"},
+            {id: 14, name: "Saidov Tohir Dilshod oʻgʻli", phone: "+998947688090", parent: "Shermatov D. / Haqberdiyeva F.", chatId: "6389454177"},
+            {id: 15, name: "Shermamatov Odilbek Anvar oʻgʻli", phone: "+998885367772", parent: "Qurbonmurodov A. / Eliva Z.", chatId: "6389454177"},
+            {id: 16, name: "Sirojov Sardor Oybek oʻgʻli", phone: "+998938905077", parent: "Ruziyev O. / Hamdamova G.", chatId: "6389454177"},
+            {id: 17, name: "Suyarov Ilyos Hamid oʻgʻli", phone: "+998505991948", parent: "Buronov H. / Yusupova G.", chatId: "6389454177"},
+            {id: 18, name: "Taniqulov Elshod Faxriddin oʻgʻli", phone: "", parent: "Otasi / Onasi", chatId: "6389454177"},
+            {id: 19, name: "Toshmamatov Komronbek Bekzod oʻgʻli", phone: "+998884703309", parent: "Bo'latov B. / Ruziyva G.", chatId: "6389454177"},
+            {id: 20, name: "Toʻxtaev Mirzabek Baxtiyor oʻgʻli", phone: "+998990351443", parent: "Norov B. / Jurayva N.", chatId: "6389454177"},
+            {id: 21, name: "Tursunov Umid Davron oʻgʻli", phone: "+998906057527", parent: "Yodgorov D. / Ahmedova B.", chatId: "6389454177"},
+            {id: 22, name: "Umarov Umidjon Kamoliddin oʻgʻli", phone: "+998500749851", parent: "Umarov K. / Eshova D.", chatId: "6389454177"},
+            {id: 23, name: "Xamdullaev Kudratjon Dilshod oʻgʻli", phone: "+998500710436", parent: "Dilshod / Maxmudova M.", chatId: "6389454177"},
+            {id: 24, name: "Xayrullaev Javohir Sadriddin oʻgʻli", phone: "+998992407741", parent: "Imomov S. / Miurzayva G.", chatId: "6389454177"},
+            {id: 25, name: "Xoldorov Azizjon Akmal oʻgʻli", phone: "+998879618333", parent: "Elmamatov A. / Ashirova M.", chatId: "6389454177"},
+            {id: 26, name: "Xudjaev Muhammadali Ixtiyor oʻgʻli", phone: "+998947212058", parent: "Xujayev S. / Xujayeva F.", chatId: "6389454177"}
+        ];
+
+        const teachersList = [
+            {name: "Axmedova K.", subject: "\"B\" va \"C\" toifa TXK"},
+            {name: "Bo'ronov I.", subject: "Y.H.Q"},
+            {name: "Razzoqova Y. / Hasanova M.", subject: "Tarbiya / Fizika"},
+            {name: "Raufov Z.", subject: "Jismoniy tarbiya"},
+            {name: "Xursandova R. / Sodiqov E.", subject: "Informatika"},
+            {name: "Abduraxmonov I. / Shodiyev D.", subject: "Rus tili"},
+            {name: "Ivaydullayeva N.", subject: "Ona tili"},
+            {name: "Elova F.", subject: "Xorijiy til"},
+            {name: "Tursunov Izzatillo", subject: "Amaliyot"},
+            {name: "Murodov R.", subject: "Q/X mexanizatsiya"},
+            {name: "Boboyev D.", subject: "Ch.Q.B.T"},
+            {name: "Qarshiyev Sunnatillo", subject: "Matematika"},
+            {name: "Turdiyev S.", subject: "Tarix"}
+        ];
+
+        const dayMap = { 1: "Du", 2: "Se", 3: "Ch", 4: "Pa", 5: "Ju", 6: "Sh", 0: "Du" };
+        const dayNamesUz = { "Du": "Dushanba", "Se": "Seshanba", "Ch": "Chorshanba", "Pa": "Payshanba", "Ju": "Juma", "Sh": "Shanba" };
+
+        let syllabusList = JSON.parse(localStorage.getItem('hemis_syllabus')) || [];
+        let attendanceHistory = JSON.parse(localStorage.getItem('hemis_attendance_history')) || [];
+        let attendanceChartInstance = null;
+
+        window.onload = function() {
+            document.getElementById('botTokenInput').value = localStorage.getItem('hemis_botToken') || "7686754775:AAFLc6MGV3cDqhGY1uOy5OEjuhEsMFoMd1c";
+            document.getElementById('chatIdInput').value = localStorage.getItem('hemis_chatId') || "6389454177";
+
+            startLiveClock();
+
+            if(window.location.hash === '#teacher') {
+                loginAsTeacherDirect();
+            }
+        };
+
+        function showLoader(text) {
+            document.getElementById('loadingText').innerText = text || "Bajarilmoqda...";
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+        }
+
+        function hideLoader() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+        }
+
+        function startLiveClock() {
+            setInterval(() => {
+                const now = new Date();
+                document.getElementById('liveClockDisplay').innerText = now.toLocaleDateString('uz-UZ') + ' ' + now.toLocaleTimeString('uz-UZ');
+            }, 1000);
+        }
+
+        function autoSelectTodaySchedule() {
+            const now = new Date();
+            const currentDayIndex = now.getDay();
+            const todayCode = dayMap[currentDayIndex];
+            
+            const selectDay = document.getElementById('selectDay');
+            if (selectDay) {
+                selectDay.value = todayCode;
+            }
+
+            const todayBadge = document.getElementById('todayBadge');
+            if (todayBadge) {
+                todayBadge.innerHTML = `<i class="fa-solid fa-calendar-check mr-1"></i> Bugun: ${dayNamesUz[todayCode]}`;
+            }
+
+            loadLessonSchedule();
+        }
+
+        function loginAsTeacherDirect() {
+            showLoader("Tizimga kirilmoqda...");
+            setTimeout(() => {
+                document.getElementById('userNameDisplay').innerText = "O'qituvchi rejimi (210-guruh)";
+                document.getElementById('userIcon').innerHTML = '<i class="fa-solid fa-chalkboard-user"></i>';
+                document.getElementById('menuStudents').style.display = 'none';
+                document.getElementById('menuBot').style.display = 'none';
+
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'flex';
+                initApp();
+                hideLoader();
+            }, 400);
+        }
+
+        function handleLogin() {
+            const login = document.getElementById('loginInput').value.trim().toLowerCase();
+            const pass = document.getElementById('passInput').value.trim();
+
+            showLoader("Autentifikatsiya qilinmoqda...");
+            setTimeout(() => {
+                hideLoader();
+                if (login === '2000200m' && pass === '2000200s') {
+                    document.getElementById('userNameDisplay').innerText = "Guruh rahbari: Qarshiyev Sunnatillo";
+                    document.getElementById('userIcon').innerHTML = '<i class="fa-solid fa-user-shield"></i>';
+                    document.getElementById('menuStudents').style.display = 'flex';
+                    document.getElementById('menuBot').style.display = 'flex';
+                } else if (login === 'oqtuvchi' && pass === '210210') {
+                    loginAsTeacherDirect();
+                    return;
+                } else {
+                    alert("Login yoki parol xato!\n- Admin: O'qituvchi: oqtuvchi / 210210");
+                    return;
+                }
+
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'flex';
+                initApp();
+            }, 500);
+        }
+
+        function logout() {
+            window.location.hash = '';
+            location.reload();
+        }
+
+        function switchTab(tabId, element) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.sidebar-link').forEach(el => {
+                el.classList.remove('text-white', 'bg-gradient-to-r', 'from-blue-600', 'to-indigo-600', 'shadow-lg', 'shadow-blue-600/25', 'font-semibold');
+                el.classList.add('text-slate-400', 'font-medium');
+            });
+
+            document.getElementById(tabId).classList.remove('hidden');
+
+            const activeBtn = element || document.getElementById('menu' + tabId.charAt(0).toUpperCase() + tabId.slice(1));
+            if(activeBtn) {
+                activeBtn.classList.remove('text-slate-400', 'font-medium');
+                activeBtn.classList.add('text-white', 'bg-gradient-to-r', 'from-blue-600', 'to-indigo-600', 'shadow-lg', 'shadow-blue-600/25', 'font-semibold');
+            }
+
+            if(tabId === 'history') {
+                renderHistoryTable();
+            } else if(tabId === 'stats') {
+                renderStatsAndChart();
+            }
+        }
+
+        function initApp() {
+            renderAttendanceTable();
+            renderStudentsTable();
+            renderTeachersTable();
+            renderSyllabus();
+            renderHistoryTable();
+            autoSelectTodaySchedule();
+        }
+
+        function loadLessonSchedule() {
+            const day = document.getElementById('selectDay').value;
+            const selectSubj = document.getElementById('selectSubject');
+            selectSubj.innerHTML = '';
+
+            let subjects = [];
+            if(day === 'Du') subjects = ["\"B\" va \"C\" toifa TXK (Axmedova K.)", "Y.H.Q (Bo'ronov I.)", "Tarbiya / Fizika (Razzoqova Y. / Hasanova M.)", "Y.H.Q / Jis. tarbiya (Bo'ronov I. / Raufov Z.)"];
+            else if(day === 'Se') subjects = ["Informatika / Rus. t (Xursandova R. / Sodiqov E.)", "Ona. t (Ivaydullayeva N.)", "Xorijiy til (Elova F.)"];
+            else if(day === 'Ch') subjects = ["Amaliyot (Tursunov Izzatillo)"];
+            else if(day === 'Pa') subjects = ["Q/X mexanizatsiya / Ona. t (Murodov R. / Ivaydullayeva N.)", "Traktor Q/X ag tuz / Ch.Q.B.T (Murodov R. / Boboyev D.)", "Matematika (Qarshiyev Sunnatillo)"];
+            else if(day === 'Ju') subjects = ["Xorijiy til (Elova F.)"];
+            else if(day === 'Sh') subjects = ["Tarix (Turdiyev S.)", "Q/X mexanizatsiya (Murodov R.)", "Traktor Q/X ag tuz (Murodov R.)"];
+
+            subjects.forEach(s => {
+                let opt = document.createElement('option');
+                opt.value = s;
+                opt.textContent = s;
+                selectSubj.appendChild(opt);
+            });
+        }
+
+        function renderAttendanceTable() {
+            const tbody = document.getElementById('attendanceTableBody');
+            tbody.innerHTML = '';
+            students26.forEach(st => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-800/40 transition">
+                        <td class="py-3.5 px-4 text-slate-500">${st.id}</td>
+                        <td class="py-3.5 px-4">
+                            <div class="font-bold text-white">${st.name}</div>
+                            <div class="text-xs text-slate-400">${st.parent}</div>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <select class="px-3.5 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs font-semibold text-white outline-none focus:ring-2 focus:ring-blue-500 status-sel" data-id="${st.id}">
+                                <option value="keldi">Keldi</option>
+                                <option value="kelmadi">Kelmadi (Sababsiz)</option>
+                                <option value="kechikdi">Kechikdi</option>
+                            </select>
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <select class="px-3.5 py-2 bg-slate-800 border border-slate-700 rounded-xl text-xs font-semibold text-white outline-none focus:ring-2 focus:ring-blue-500 grade-sel w-24" data-id="${st.id}">
+                                <option value="-">-</option>
+                                <option value="5">5</option>
+                                <option value="4">4</option>
+                                <option value="3">3</option>
+                                <option value="2">2</option>
+                            </select>
+                        </td>
+                        <td class="py-3.5 px-4 text-slate-400 text-xs font-mono">${st.chatId}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderStudentsTable() {
+            const tbody = document.getElementById('studentsTableBody');
+            tbody.innerHTML = '';
+            students26.forEach(st => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-800/40 transition">
+                        <td class="py-3.5 px-4 text-slate-500">${st.id}</td>
+                        <td class="py-3.5 px-4 font-bold text-white">${st.name}</td>
+                        <td class="py-3.5 px-4 text-slate-400">${st.parent}</td>
+                        <td class="py-3.5 px-4 text-slate-400">${st.phone || 'Kiritilmagan'}</td>
+                        <td class="py-3.5 px-4 text-slate-500 font-mono text-xs">${st.chatId}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderTeachersTable() {
+            const tbody = document.getElementById('teachersTableBody');
+            tbody.innerHTML = '';
+            teachersList.forEach(t => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-800/40 transition">
+                        <td class="py-3.5 px-4 font-bold text-white">${t.name}</td>
+                        <td class="py-3.5 px-4 text-slate-400">${t.subject}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderHistoryTable() {
+            const tbody = document.getElementById('historyTableBody');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+
+            if(attendanceHistory.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-500 text-xs">Hozircha saqlangan davomat tarixi mavjud emas.</td></tr>`;
+                return;
+            }
+
+            attendanceHistory.slice().reverse().forEach(item => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-800/40 transition">
+                        <td class="py-3.5 px-4 text-slate-300 font-semibold text-xs">${item.date}</td>
+                        <td class="py-3.5 px-4 font-bold text-white">${item.subject}</td>
+                        <td class="py-3.5 px-4 text-emerald-400 font-bold">${item.present} nafar</td>
+                        <td class="py-3.5 px-4 text-amber-400 font-bold">${item.late} nafar</td>
+                        <td class="py-3.5 px-4 text-rose-400 font-bold">${item.absent} nafar</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function clearHistory() {
+            if(confirm("Barcha davomat tarixi o'chirib yuborilsinmi?")) {
+                attendanceHistory = [];
+                localStorage.removeItem('hemis_attendance_history');
+                renderHistoryTable();
+                alert("Davomat tarixi tozalandi.");
+            }
+        }
+
+        function renderStatsAndChart() {
+            document.getElementById('statTotalSessions').innerText = attendanceHistory.length + ' ta';
+            
+            if(attendanceHistory.length > 0) {
+                let totalPresent = attendanceHistory.reduce((acc, curr) => acc + curr.present, 0);
+                let totalPossible = attendanceHistory.length * 26;
+                let avg = Math.round((totalPresent / totalPossible) * 100);
+                document.getElementById('statAvgAttendance').innerText = avg + '%';
+            } else {
+                document.getElementById('statAvgAttendance').innerText = '0%';
+            }
+
+            const ctx = document.getElementById('attendanceChart').getContext('2d');
+            
+            const labels = attendanceHistory.slice(-7).map(item => item.date.split(',')[0] + ' (' + item.subject.split(' ')[0] + ')');
+            const dataPresent = attendanceHistory.slice(-7).map(item => item.present);
+            const dataAbsent = attendanceHistory.slice(-7).map(item => item.absent);
+
+            if(attendanceChartInstance) {
+                attendanceChartInstance.destroy();
+            }
+
+            attendanceChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels.length ? labels : ['Ma\'lumot yo\'q'],
+                    datasets: [
+                        {
+                            label: 'Kelganlar',
+                            data: dataPresent.length ? dataPresent : [0],
+                            backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                            borderColor: 'rgb(16, 185, 129)',
+                            borderWidth: 1,
+                            borderRadius: 8
+                        },
+                        {
+                            label: 'Kelmaganlar',
+                            data: dataAbsent.length ? dataAbsent : [0],
+                            backgroundColor: 'rgba(244, 63, 94, 0.7)',
+                            borderColor: 'rgb(244, 63, 94)',
+                            borderWidth: 1,
+                            borderRadius: 8
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#cbd5e1', font: { family: 'Plus Jakarta Sans', size: 12 } }
+                        }
+                    },
+                    scales: {
+                        x: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } },
+                        y: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' }, beginAtZero: true, max: 26 }
+                    }
+                }
+            });
+        }
+
+        function exportAttendanceExcel() {
+            showLoader("Excel fayl tayyorlanmoqda...");
+            setTimeout(() => {
+                let csv = "T/r,F.I.SH,Holati,Baho,Ota-ona\n";
+                const statusSelects = document.querySelectorAll('.status-sel');
+                const gradeSelects = document.querySelectorAll('.grade-sel');
+
+                statusSelects.forEach((sel, index) => {
+                    const stId = sel.getAttribute('data-id');
+                    const st = students26.find(s => s.id == stId);
+                    const status = sel.value;
+                    const grade = gradeSelects[index].value;
+                    csv += `${st.id},"${st.name}",${status},${grade},"${st.parent}"\n`;
+                });
+
+                const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `210-guruh-davomat-${new Date().toLocaleDateString('uz-UZ')}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                hideLoader();
+            }, 600);
+        }
+
+        function exportStudentsExcel() {
+            showLoader("Talabalar ro'yxati eksport qilinmoqda...");
+            setTimeout(() => {
+                let csv = "T/r,F.I.SH,Ota-ona,Telefon,ChatID\n";
+                students26.forEach(st => {
+                    csv += `${st.id},"${st.name}","${st.parent}","${st.phone || 'Kiritilmagan'}",${st.chatId}\n`;
+                });
+
+                const blob = new Blob(["\ufeff" + csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `210-guruh-talabalar-royxati.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                hideLoader();
+            }, 600);
+        }
+
+        function addSyllabus() {
+            const subj = document.getElementById('syllabusSubject').value.trim();
+            const top = document.getElementById('syllabusTopic').value.trim();
+            if(!top) { alert("Mavzu nomini kiriting!"); return; }
+            
+            syllabusList.push({subject: subj, topic: top, date: new Date().toLocaleDateString('uz-UZ')});
+            localStorage.setItem('hemis_syllabus', JSON.stringify(syllabusList));
+            document.getElementById('syllabusTopic').value = '';
+            renderSyllabus();
+        }
+
+        function deleteSyllabus(index) {
+            syllabusList.splice(index, 1);
+            localStorage.setItem('hemis_syllabus', JSON.stringify(syllabusList));
+            renderSyllabus();
+        }
+
+        function renderSyllabus() {
+            const tbody = document.getElementById('syllabusTableBody');
+            tbody.innerHTML = '';
+            syllabusList.forEach((s, idx) => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-800/40 transition">
+                        <td class="py-3.5 px-4 text-slate-500">${idx+1}</td>
+                        <td class="py-3.5 px-4 font-bold text-white">${s.subject}</td>
+                        <td class="py-3.5 px-4 text-slate-400">${s.topic}</td>
+                        <td class="py-3.5 px-4 text-slate-500 text-xs">${s.date}</td>
+                        <td class="py-3.5 px-4 text-xs">
+                            <button onclick="deleteSyllabus(${idx})" class="text-rose-400 hover:text-rose-300 font-bold transition"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function saveBotSettings() {
+            const token = document.getElementById('botTokenInput').value.trim();
+            const chatId = document.getElementById('chatIdInput').value.trim();
+            
+            localStorage.setItem('hemis_botToken', token);
+            localStorage.setItem('hemis_chatId', chatId);
+            
+            alert("Telegram Bot sozlamalari muvaffaqiyatli saqlandi!");
+        }
+
+        const delay = ms => new Promise(res => setTimeout(res, ms));
+
+        async function saveAttendanceAndSendTelegram() {
+            const token = document.getElementById('botTokenInput').value.trim();
+            const adminChatId = document.getElementById('chatIdInput').value.trim();
+            const statusSelects = document.querySelectorAll('.status-sel');
+            const gradeSelects = document.querySelectorAll('.grade-sel');
+            const subject = document.getElementById('selectSubject').value;
+            const btn = document.getElementById('btnSaveAttendance');
+
+            if (!token) {
+                alert("Iltimos, avval Telegram Bot Token-ni kiriting!");
+                return;
+            }
+
+            btn.disabled = true;
+            showLoader("Davomat saqlanmoqda va Telegramga yuborilmoqda...");
+
+            let presentCount = 0;
+            let absentCount = 0;
+            let lateCount = 0;
+
+            for (let i = 0; i < statusSelects.length; i++) {
+                const status = statusSelects[i].value;
+                if (status === 'keldi') presentCount++;
+                else if (status === 'kelmadi') absentCount++;
+                else if (status === 'kechikdi') lateCount++;
+            }
+
+            // Tarixga qo'shish
+            attendanceHistory.push({
+                date: new Date().toLocaleString('uz-UZ'),
+                subject: subject,
+                present: presentCount,
+                absent: absentCount,
+                late: lateCount
+            });
+            localStorage.setItem('hemis_attendance_history', JSON.stringify(attendanceHistory));
+
+            // 1. Ota-onalarga individual xabarnomalar
+            for (let i = 0; i < statusSelects.length; i++) {
+                const status = statusSelects[i].value;
+                const studentId = statusSelects[i].getAttribute('data-id');
+                const student = students26.find(s => s.id == studentId);
+                const grade = gradeSelects[i].value;
+
+                if (status === 'kelmadi' || status === 'kechikdi') {
+                    const targetChatId = student.chatId || adminChatId;
+                    const text = `⚠️ *Ogohlantirish (HEMIS 210-guruh)*:\n\nHurmatli ota-ona, farzandingiz *${student.name}* bugungi "${subject}" darsiga *${status === 'kelmadi' ? 'KELMAGANI (Sababsiz)' : 'KECHIKIB KELDI'}*.\n\nBaho: ${grade}\nGuruh rahbari: Qarshiyev Sunnatillo`;
+
+                    if(targetChatId) {
+                        try {
+                            await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+                                method: 'POST',
+                                headers: {'Content-Type': 'application/json'},
+                                body: JSON.stringify({
+                                    chat_id: targetChatId,
+                                    text: text,
+                                    parse_mode: 'Markdown'
+                                })
+                            });
+                        } catch(e) {
+                            console.error("Xabarnoma yuborishda xatolik:", e);
+                        }
+                        await delay(300);
+                    }
+                }
+            }
+
+            // 2. Guruh rahbariga umumiy hisobot
+            if (adminChatId) {
+                const summaryText = `📊 *210-Guruh Davomat Hisoboti*\n\n` +
+                                    `👨‍🏫 *Guruh rahbari:* S. Qarshiyev\n` +
+                                    `📚 *Fan:* ${subject}\n` +
+                                    `📅 *Sana:* ${new Date().toLocaleDateString('uz-UZ')}\n\n` +
+                                    `✅ *Kelganlar:* ${presentCount} nafar\n` +
+                                    `⚠️ *Kechikkanlar:* ${lateCount} nafar\n` +
+                                    `❌ *Kelmaganlar:* ${absentCount} nafar\n` +
+                                    `👥 *Jami o'quvchilar:* ${students26.length} nafar\n\n` +
+                                    `_Tizim orqali avtomatik yuborildi._`;
+                try {
+                    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            chat_id: adminChatId,
+                            text: summaryText,
+                            parse_mode: 'Markdown'
+                        })
+                    });
+                } catch(e) {
+                    console.error("Admin hisobotini yuborishda xatolik:", e);
+                }
+            }
+
+            hideLoader();
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Saqlash & Telegramga Yuborish';
+
+            alert(`Davomat muvaffaqiyatli saqlandi va tarixga yozildi!\n- Jami kelganlar: ${presentCount} nafar\n- Kelmaganlar: ${absentCount} nafar\n- Telegramingizga hisobot yuborildi!`);
+        }
+    </script>
+</body>
+</html>
